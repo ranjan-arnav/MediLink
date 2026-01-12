@@ -9,8 +9,8 @@ export function Header() {
   return (
     <header className="container mx-auto px-4 py-4 flex justify-between items-center">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-teal-500/20 overflow-hidden">
-          <img src="/logo.png" alt="MediLink Logo" className="w-full h-full object-cover" />
+        <div className="w-12 h-12 flex items-center justify-center">
+          <img src="/logo.png" alt="MediLink Logo" className="w-full h-full object-contain" />
         </div>
         <div>
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400">MediLink</span>

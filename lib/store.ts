@@ -71,6 +71,19 @@ export interface Notification {
   link?: string
 }
 
+export interface MedicalRecord {
+  id: string
+  userId: string
+  date: string
+  name: string
+  type: 'Voice Consultation' | 'Lab Report' | 'Clinical Note' | 'Imaging' | 'Immunization'
+  provider: string
+  summary: string
+  severity: 'mild' | 'moderate' | 'severe' | 'critical'
+  recommendations: string[]
+  rawAnswers?: string[]
+}
+
 interface AppState {
   // Auth
   user: User | null
@@ -108,11 +121,13 @@ interface AppState {
   // Patients (for doctors)
   patients: User[]
   addPatient: (patient: User) => void
-}
 
+  // Medical Records
+  medicalRecords: MedicalRecord[]
+  addMedicalRecord: (record: Omit<MedicalRecord, 'id'>) => void
+}
 export const useStore = create<AppState>()(
-  // Temporarily disabled persist to debug infinite loop
-  // persist(
+  persist(
     (set) => ({
       // Auth
       user: null,
@@ -231,20 +246,31 @@ export const useStore = create<AppState>()(
         set((state) => ({
           patients: [...state.patients, patient],
         })),
-    })
-  // Temporarily disabled persist to debug infinite loop
-  // }),
-  // {
-  //   name: 'care-connect-storage',
-  //   partialize: (state) => ({
-  //     user: state.user,
-  //     symptomReports: state.symptomReports,
-  //     medications: state.medications,
-  //     appointments: state.appointments,
-  //     emergencyAlerts: state.emergencyAlerts,
-  //     notifications: state.notifications,
-  //     patients: state.patients,
-  //   }),
-  // }
-  // )
+
+      // Medical Records
+      medicalRecords: [],
+      addMedicalRecord: (record) => {
+        const newRecord: MedicalRecord = {
+          ...record,
+          id: crypto.randomUUID(),
+        }
+        set((state) => ({
+          medicalRecords: [newRecord, ...state.medicalRecords],
+        }))
+      },
+    }),
+    {
+      name: 'medilink-storage',
+      partialize: (state) => ({
+        user: state.user,
+        symptomReports: state.symptomReports,
+        medications: state.medications,
+        appointments: state.appointments,
+        emergencyAlerts: state.emergencyAlerts,
+        notifications: state.notifications,
+        patients: state.patients,
+        medicalRecords: state.medicalRecords,
+      }),
+    }
+  )
 )

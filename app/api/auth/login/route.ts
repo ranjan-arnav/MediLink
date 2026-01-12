@@ -9,9 +9,9 @@ export async function POST(request: NextRequest) {
     const mockUsers = {
       patient: {
         id: '1',
-        name: 'Sri Hasnika',
-        email: 'patient@careconnect.com',
-        role: 'patient' as const,
+        name: 'Demo Patient',
+        email: 'patient@medilink.com',
+        role: 'patient',
       },
       doctor: {
         id: '2',

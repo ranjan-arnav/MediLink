@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -38,14 +38,23 @@ export default function MedReminderPage() {
   })
 
   const onSubmit = async (data: MedicationFormData) => {
-    if (!user) return
+    console.log('Form submitted:', data)
+    console.log('User:', user)
+
+    if (!user) {
+      console.log('No user found - aborting')
+      alert('You must be logged in to add medications.')
+      return
+    }
 
     try {
+      console.log('Editing medication:', editingMedication)
       if (editingMedication) {
         updateMedication(editingMedication, {
           ...data,
           userId: user.id,
         })
+        console.log('Medication updated')
         addNotification({
           userId: user.id,
           title: 'Medication Updated',
@@ -57,6 +66,7 @@ export default function MedReminderPage() {
           ...data,
           userId: user.id,
         })
+        console.log('Medication added')
         addNotification({
           userId: user.id,
           title: 'Medication Added',
@@ -68,8 +78,10 @@ export default function MedReminderPage() {
       reset()
       setEditingMedication(null)
       setIsModalOpen(false)
+      console.log('Form closed successfully')
     } catch (error) {
       console.error('Error saving medication:', error)
+      alert('Error saving medication: ' + error)
     }
   }
 
@@ -100,6 +112,88 @@ export default function MedReminderPage() {
     }
   }
 
+  // Notification Permission
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission()
+      }
+    }
+  }, [])
+
+  // Check for Reminders
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date()
+      const currentTime = format(now, 'h:mm a')
+
+      medications.forEach(med => {
+        if (med.times.includes(currentTime)) {
+          // Check if we already notified for this med today/time (basic debounce could be added here in real app)
+          if (Notification.permission === 'granted') {
+            new Notification(`Time for ${med.name}`, {
+              body: `Take ${med.dosage}. ${med.notes || ''}`,
+              icon: '/logo.png'
+            })
+
+            // Also add in-app notification
+            addNotification({
+              userId: user?.id || '',
+              title: `Medication Reminder: ${med.name}`,
+              message: `It's ${currentTime}. Take ${med.dosage}.`,
+              type: 'info'
+            })
+
+            // Trigger Voice Call
+            fetch('/api/call-state', {
+              method: 'POST',
+              body: JSON.stringify({
+                status: 'ringing',
+                data: {
+                  type: 'announcement',
+                  text: `Hello ${user?.name || 'Patient'}. It is time to take your medication: ${med.name}, ${med.dosage}.`
+                }
+              })
+            })
+          }
+        }
+      })
+    }, 60000) // Check every minute
+
+    return () => clearInterval(interval)
+  }, [medications, user, addNotification])
+
+  // Smart Scheduling
+  const selectedFrequency = watch('frequency')
+  useEffect(() => {
+    if (!selectedFrequency) return
+
+    let suggestedTimes: string[] = []
+    switch (selectedFrequency) {
+      case 'Once daily':
+        suggestedTimes = ['9:00 AM']
+        break
+      case 'Twice daily':
+        suggestedTimes = ['9:00 AM', '9:00 PM']
+        break
+      case 'Three times daily':
+        suggestedTimes = ['9:00 AM', '1:00 PM', '9:00 PM']
+        break
+      case 'Four times daily':
+        suggestedTimes = ['9:00 AM', '1:00 PM', '5:00 PM', '9:00 PM']
+        break
+      case 'As needed':
+        suggestedTimes = []
+        break
+    }
+
+    // Only auto-fill if times are empty to avoid overwriting user edits
+    const currentTimes = watch('times') || []
+    if (currentTimes.length === 0 && suggestedTimes.length > 0) {
+      setValue('times', suggestedTimes)
+    }
+  }, [selectedFrequency, setValue, watch])
+
   const timeSlots = [
     '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM',
     '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM',
@@ -128,10 +222,22 @@ export default function MedReminderPage() {
       <div className="flex justify-center">
         <button
           onClick={() => {
+            // Trigger Demo Call
+            fetch('/api/call-state', {
+              method: 'POST',
+              body: JSON.stringify({
+                status: 'ringing',
+                data: {
+                  type: 'announcement',
+                  text: `Hello ${user?.name || 'Patient'}. This is a test.`
+                }
+              })
+            })
+
             addNotification({
               userId: user?.id || '',
               title: 'Voice Reminder Demo',
-              message: 'This is a demo of the voice reminder call feature.',
+              message: 'Calling your mobile device...',
               type: 'info',
             })
           }}
@@ -205,6 +311,31 @@ export default function MedReminderPage() {
                   </div>
                   <div className="flex gap-2">
                     <button
+                      onClick={() => {
+                        fetch('/api/call-state', {
+                          method: 'POST',
+                          body: JSON.stringify({
+                            status: 'ringing',
+                            data: {
+                              type: 'announcement',
+                              text: `Reminder. It is time for ${medication.name}. Dosage is ${medication.dosage}. ${medication.notes ? 'Note: ' + medication.notes : ''}`
+                            }
+                          })
+                        })
+
+                        addNotification({
+                          userId: user?.id || '',
+                          title: 'Test Call Sent',
+                          message: `Calling mobile for ${medication.name}...`,
+                          type: 'info'
+                        })
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded disabled:opacity-50"
+                      title="Test Call"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleEdit(medication.id)}
                       className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                     >
@@ -244,7 +375,7 @@ export default function MedReminderPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit(onSubmit, (errors) => console.log('Validation errors:', errors))} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Medication Name *
@@ -317,7 +448,7 @@ export default function MedReminderPage() {
                             const newTimes = e.target.checked
                               ? [...currentTimes, time]
                               : currentTimes.filter((t) => t !== time)
-                            setValue('times', newTimes)
+                            setValue('times', newTimes, { shouldValidate: true })
                           }}
                           className="w-4 h-4"
                         />

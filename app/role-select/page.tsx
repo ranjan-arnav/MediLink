@@ -73,7 +73,7 @@ export default function RoleSelectPage() {
         <div className="w-full max-w-5xl">
           {/* Logo Section */}
           <div className="text-center mb-16">
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-2xl shadow-teal-500/20 mb-6 overflow-hidden p-2">
+            <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
               <img src="/logo.png" alt="MediLink Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">

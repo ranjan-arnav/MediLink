@@ -23,8 +23,8 @@ export function DashboardLayout({ children, role, userName, userRole }: Dashboar
         {/* Top Header */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-md overflow-hidden">
-              <img src="/logo.png" alt="MediLink Logo" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 flex items-center justify-center">
+              <img src="/logo.png" alt="MediLink Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">MediLink</span>
           </div>
