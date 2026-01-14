@@ -64,24 +64,24 @@ export default function PatientDashboard() {
       </div>
 
       {/* BIG BUTTONS GRID - PRIMARY ACTIONS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         <BigActionCard
           href="/patient/symptom-screening"
-          icon={<Thermometer className="w-12 h-12" />}
+          icon={<Thermometer className="w-10 h-10 lg:w-12 lg:h-12" />}
           title="Check Symptoms"
           subtitle="I'm not feeling well"
           color="orange"
         />
         <BigActionCard
           href="/patient/med-reminder"
-          icon={<AlertCircle className="w-12 h-12" />} // Changed icon for better clarity
+          icon={<AlertCircle className="w-10 h-10 lg:w-12 lg:h-12" />} // Changed icon for better clarity
           title="My Medicines"
           subtitle="View reminders & schedule"
           color="blue"
         />
         <BigActionCard
           href="/patient/appointments"
-          icon={<Calendar className="w-12 h-12" />}
+          icon={<Calendar className="w-10 h-10 lg:w-12 lg:h-12" />}
           title="Doctor Visits"
           subtitle="See upcoming appointments"
           color="teal"
@@ -169,12 +169,12 @@ function BigActionCard({ href, icon, title, subtitle, color }: any) {
   return (
     <Link
       href={href}
-      className={`group p-8 rounded-3xl ${colors[color]} ring-1 transition-all hover:scale-[1.02] hover:shadow-xl flex flex-col items-center text-center gap-4`}
+      className={`group p-6 lg:p-8 rounded-2xl lg:rounded-3xl ${colors[color]} ring-1 transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl flex flex-col items-center text-center gap-3 lg:gap-4 touch-manipulation`}
     >
-      <div className="p-4 bg-white dark:bg-white/10 rounded-full shadow-sm">{icon}</div>
+      <div className="p-3 lg:p-4 bg-white dark:bg-white/10 rounded-full shadow-sm">{icon}</div>
       <div>
-        <h3 className="text-2xl font-bold mb-1">{title}</h3>
-        <p className="text-lg opacity-80">{subtitle}</p>
+        <h3 className="text-xl lg:text-2xl font-bold mb-1">{title}</h3>
+        <p className="text-base lg:text-lg opacity-80">{subtitle}</p>
       </div>
     </Link>
   )
