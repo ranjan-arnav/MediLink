@@ -1,1 +1,1 @@
-{"status":"idle","data":{}}
+{"status":"ringing","data":{"type":"interview","text":"Incoming Symptom Screen","questions":["Hello. I am your medical assistant. Please tell me in detail, what are your main symptoms?","How long have you been experiencing these symptoms?","On a scale of one to ten, how severe is the pain?","Do you have any existing medical conditions or history I should know about?"],"contextId":"symptom-screening"}}

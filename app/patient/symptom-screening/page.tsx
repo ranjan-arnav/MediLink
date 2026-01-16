@@ -251,7 +251,7 @@ export default function SymptomScreeningPage() {
         {/* STEP 1: SYMPTOMS */}
         {currentStep === 'symptoms' && (
           <div className="flex-1">
-            <h2 className="text-2xl font-bold mb-6">What are you feeling?</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">What are you feeling?</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
               {commonSymptoms.map(sym => (
                 <button
@@ -262,7 +262,7 @@ export default function SymptomScreeningPage() {
                     "p-3 rounded-xl border-2 text-sm font-medium transition-all hover:scale-105 active:scale-95",
                     selectedSymptoms.includes(sym)
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-                      : "border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:border-blue-200"
+                      : "border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:border-blue-200 text-gray-700 dark:text-gray-200"
                   )}
                 >
                   {sym}
@@ -315,10 +315,10 @@ export default function SymptomScreeningPage() {
         {/* STEP 2: DETAILS */}
         {currentStep === 'details' && (
           <div className="flex-1 space-y-8">
-            <h2 className="text-2xl font-bold">Tell us more details</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Tell us more details</h2>
 
             <div>
-              <label className="block font-medium mb-3">How long have you felt this way?</label>
+              <label className="block font-medium mb-3 text-gray-700 dark:text-gray-200">How long have you felt this way?</label>
               <div className="grid grid-cols-4 gap-3">
                 {['< 1 hr', 'Today', '2-3 Days', '1 Week+'].map(d => (
                   <button
@@ -326,7 +326,7 @@ export default function SymptomScreeningPage() {
                     onClick={() => setDuration(d)}
                     className={cn(
                       "py-3 rounded-lg border-2 font-medium",
-                      duration === d ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "border-gray-200 dark:border-gray-700"
+                      duration === d ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200"
                     )}
                   >
                     {d}
@@ -336,7 +336,7 @@ export default function SymptomScreeningPage() {
             </div>
 
             <div>
-              <label className="block font-medium mb-3">Pain Level (1-10)</label>
+              <label className="block font-medium mb-3 text-gray-700 dark:text-gray-200">Pain Level (1-10)</label>
               <input
                 type="range"
                 min="1" max="10"
@@ -352,11 +352,11 @@ export default function SymptomScreeningPage() {
             </div>
 
             <div>
-              <label className="block font-medium mb-2">Anything else notable?</label>
+              <label className="block font-medium mb-2 text-gray-700 dark:text-gray-200">Anything else notable?</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
                 rows={3}
                 placeholder="e.g. sharp pain when I breathe in..."
               />
@@ -367,13 +367,13 @@ export default function SymptomScreeningPage() {
         {/* STEP 3: HISTORY */}
         {currentStep === 'history' && (
           <div className="flex-1 space-y-6">
-            <h2 className="text-2xl font-bold">Relevant History</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Relevant History</h2>
             <p className="text-gray-500 dark:text-gray-400">Do you have any existing conditions we should know about?</p>
 
             <textarea
               value={medicalHistory}
               onChange={(e) => setMedicalHistory(e.target.value)}
-              className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none h-48"
+              className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none h-48 text-gray-900 dark:text-white placeholder:text-gray-400"
               placeholder="e.g. Asthma, Diabetes, Heart Condition, recent surgery..."
             />
 

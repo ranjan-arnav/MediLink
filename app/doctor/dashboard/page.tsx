@@ -10,6 +10,17 @@ export default function DoctorDashboard() {
   const allEmergencyAlerts = useStore((state) => state.emergencyAlerts)
   const appointments = useStore((state) => state.appointments)
   const patients = useStore((state) => state.patients)
+  const dietPlans = useStore((state) => state.dietPlans) || []
+  const updateDietPlanStatus = useStore((state) => state.updateDietPlanStatus)
+
+  const pendingDietPlans = useMemo(() =>
+    dietPlans.filter((p) => p.status === 'pending'),
+    [dietPlans]
+  )
+
+  const handleReviewPlan = (id: string, status: 'approved' | 'rejected') => {
+    updateDietPlanStatus(id, status)
+  }
 
   const emergencyAlerts = useMemo(() =>
     allEmergencyAlerts.filter((a) => a.status === 'active'),
@@ -23,7 +34,7 @@ export default function DoctorDashboard() {
       const today = new Date().toISOString().split('T')[0]
       return a.date === today
     }).length || 8,
-    pendingReviews: 12,
+    pendingReviews: pendingDietPlans.length,
     avgConsultTime: '24m',
   }
 
@@ -68,12 +79,12 @@ export default function DoctorDashboard() {
         <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 rounded-lg p-6">
           <div className="flex items-center gap-3 mb-4">
             <AlertTriangle className="w-6 h-6 text-red-600" />
-            <span className="text-red-600 font-bold">activeEmergencies</span>
+            <span className="text-red-600 font-bold">Active Emergencies</span>
             <span className="px-2 py-1 bg-red-600 text-white rounded-full text-sm font-bold">
               {emergencyAlerts.length}
             </span>
           </div>
-          <p className="text-red-600 mb-4">immediateAttentionRequired</p>
+          <p className="text-red-600 mb-4">Immediate attention required</p>
 
           {emergencyAlerts.map((alert) => (
             <div
@@ -93,7 +104,7 @@ export default function DoctorDashboard() {
                     </p>
                     <div className="flex items-center gap-4 mt-2">
                       <span className="px-2 py-1 bg-red-600 text-white text-xs font-medium rounded">
-                        critical Priority
+                        Critical Priority
                       </span>
                       <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                         <Clock className="w-4 h-4" />
@@ -121,6 +132,68 @@ export default function DoctorDashboard() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Diet Plan Approvals */}
+      {pendingDietPlans.length > 0 && (
+        <div className="bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+              <FileText className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Diet Plan Requests</h2>
+              <p className="text-sm text-gray-500">{pendingDietPlans.length} plans waiting for approval</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {pendingDietPlans.map(plan => (
+              <div key={plan.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">{plan.userName}</h3>
+                    <p className="text-sm text-gray-500">Submitted {formatDistanceToNow(new Date(plan.generatedAt), { addSuffix: true })}</p>
+                  </div>
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold uppercase">Pending Review</span>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4 mb-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg">
+                  <div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Breakfast</span>
+                    <p className="font-medium text-gray-900 dark:text-white">{plan.meals.breakfast.title}</p>
+                    <p className="text-xs text-gray-500">{plan.meals.breakfast.calories} kcal</p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lunch</span>
+                    <p className="font-medium text-gray-900 dark:text-white">{plan.meals.lunch.title}</p>
+                    <p className="text-xs text-gray-500">{plan.meals.lunch.calories} kcal</p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Dinner</span>
+                    <p className="font-medium text-gray-900 dark:text-white">{plan.meals.dinner.title}</p>
+                    <p className="text-xs text-gray-500">{plan.meals.dinner.calories} kcal</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => handleReviewPlan(plan.id, 'rejected')}
+                    className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-medium transition-colors"
+                  >
+                    Reject Plan
+                  </button>
+                  <button
+                    onClick={() => handleReviewPlan(plan.id, 'approved')}
+                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-md transition-colors flex items-center gap-2"
+                  >
+                    Approve Plan
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

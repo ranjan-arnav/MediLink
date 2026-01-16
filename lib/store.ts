@@ -84,6 +84,21 @@ export interface MedicalRecord {
   rawAnswers?: string[]
 }
 
+export interface DietLog {
+  id: string
+  userId: string
+  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack'
+  foodItem: string
+  calories: number
+  protein: string
+  carbs: string
+  fats: string
+  healthScore: 'Healthy' | 'Moderate' | 'Unhealthy'
+  analysis: string
+  timestamp: string
+  imageUrl?: string
+}
+
 interface AppState {
   // Auth
   user: User | null
@@ -125,11 +140,32 @@ interface AppState {
   // Medical Records
   medicalRecords: MedicalRecord[]
   addMedicalRecord: (record: Omit<MedicalRecord, 'id'>) => void
+
+  // Diet Logs
+  dietLogs: DietLog[]
+  addDietLog: (log: Omit<DietLog, 'id' | 'timestamp'>) => void
+
+  // Diet Plans
+  dietPlans: DietPlan[]
+  addDietPlan: (plan: Omit<DietPlan, 'id' | 'generatedAt' | 'status'>) => void
+  updateDietPlanStatus: (id: string, status: 'approved' | 'rejected', feedback?: string) => void
 }
+
+export interface DietPlan {
+  id: string
+  userId: string
+  userName: string
+  status: 'pending' | 'approved' | 'rejected'
+  meals: { breakfast: any, lunch: any, dinner: any }
+  generatedAt: string
+  doctorFeedback?: string
+}
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
-      // Auth
+      // ... existing auth ...
+
       user: null,
       setUser: (user) => set({ user }),
       logout: () => set({ user: null }),
@@ -258,6 +294,37 @@ export const useStore = create<AppState>()(
           medicalRecords: [newRecord, ...state.medicalRecords],
         }))
       },
+      // Diet Logs
+      dietLogs: [],
+      addDietLog: (log) => {
+        const newLog: DietLog = {
+          ...log,
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+        }
+        set((state) => ({
+          dietLogs: [newLog, ...state.dietLogs],
+        }))
+      },
+      // Diet Plans
+      dietPlans: [],
+      addDietPlan: (plan) => {
+        const newPlan: DietPlan = {
+          ...plan,
+          id: crypto.randomUUID(),
+          generatedAt: new Date().toISOString(),
+          status: 'pending'
+        }
+        set((state) => ({
+          dietPlans: [...state.dietPlans, newPlan]
+        }))
+      },
+      updateDietPlanStatus: (id, status, feedback) =>
+        set((state) => ({
+          dietPlans: state.dietPlans.map(p =>
+            p.id === id ? { ...p, status, doctorFeedback: feedback } : p
+          )
+        })),
     }),
     {
       name: 'medilink-storage',
@@ -270,6 +337,8 @@ export const useStore = create<AppState>()(
         notifications: state.notifications,
         patients: state.patients,
         medicalRecords: state.medicalRecords,
+        dietLogs: state.dietLogs,
+        dietPlans: state.dietPlans,
       }),
     }
   )
