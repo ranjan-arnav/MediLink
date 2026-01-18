@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
+import { useUserStore } from '@/lib/userStore'
 import { useStore } from '@/lib/store'
 
 const publicRoutes = ['/', '/role-select']
@@ -10,7 +11,7 @@ const publicRoutes = ['/', '/role-select']
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const user = useStore((state) => state.user)
+  const user = useUserStore((state) => state.user)
 
   useEffect(() => {
     // Skip if on public route

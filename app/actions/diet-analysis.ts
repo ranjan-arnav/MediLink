@@ -1,6 +1,6 @@
 'use server'
 
-import ModelClient from "@azure-rest/ai-inference";
+import ModelClient, { isUnexpected } from "@azure-rest/ai-inference";
 import { AzureKeyCredential } from "@azure/core-auth";
 
 const token = process.env.GITHUB_TOKEN;
@@ -21,7 +21,7 @@ export async function analyzeDietAction(foodDescription: string) {
     }
 
     try {
-        const client = new ModelClient(
+        const client = ModelClient(
             "https://models.inference.ai.azure.com",
             new AzureKeyCredential(token)
         );
@@ -54,7 +54,7 @@ export async function analyzeDietAction(foodDescription: string) {
             }
         });
 
-        if (response.status !== "200") {
+        if (isUnexpected(response)) {
             throw response.body.error;
         }
 
@@ -88,7 +88,7 @@ export async function generateDietPlanAction(prefs: { diet: string, cuisine: str
     }
 
     try {
-        const client = new ModelClient(
+        const client = ModelClient(
             "https://models.inference.ai.azure.com",
             new AzureKeyCredential(token)
         );
@@ -123,7 +123,7 @@ export async function generateDietPlanAction(prefs: { diet: string, cuisine: str
             }
         });
 
-        if (response.status !== "200") {
+        if (isUnexpected(response)) {
             throw response.body.error;
         }
 

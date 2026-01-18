@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation'
 import { Activity, User, UserCheck, Shield, ChevronRight } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { cn } from '@/lib/utils'
-import { useStore } from '@/lib/store'
+import { useUserStore } from '@/lib/userStore'
 
 type Role = 'patient' | 'doctor' | 'police'
 
 export default function RoleSelectPage() {
   const [selectedRole, setSelectedRole] = useState<Role>('patient')
   const router = useRouter()
-  const setUser = useStore((state) => state.setUser)
+  const setUser = useUserStore((state) => state.setUser)
 
   const handleContinue = () => {
     // Set user based on role
@@ -24,7 +24,7 @@ export default function RoleSelectPage() {
         role: 'patient' as const,
       },
       doctor: {
-        id: '2',
+        id: 'doctor-1',
         name: 'Demo Doctor',
         email: 'doctor@medilink.com',
         role: 'doctor' as const,

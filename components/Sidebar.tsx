@@ -30,6 +30,7 @@ const patientMenuItems = [
   { href: '/patient/health-plan', label: 'Health & Fitness Plan', icon: Dumbbell },
   { href: '/patient/workout', label: 'Workout Trainer', icon: Activity },
   { href: '/patient/appointments', label: 'Appointment', icon: Calendar },
+  { href: '/patient/chat', label: 'Chat', icon: MessageSquare },
   { href: '/patient/hospitals', label: 'Nearby Hospital', icon: MapPin },
   { href: '/patient/ai-prescriptions', label: 'AI Prescription', icon: FileText },
   { href: '/patient/prescriptions', label: 'Prescription', icon: Pill },
@@ -51,10 +52,12 @@ const policeMenuItems = [
   { href: '/police/alert-history', label: 'Alert History', icon: FileText },
 ]
 
+import { useUserStore } from '@/lib/userStore'
+
 export function Sidebar({ role, userName, userRole, isOpen = true, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const logout = useStore((state) => state.logout)
+  const logout = useUserStore((state) => state.logout)
 
   const menuItems = role === 'patient'
     ? patientMenuItems

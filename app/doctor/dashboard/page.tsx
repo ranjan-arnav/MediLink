@@ -1,16 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
-import { AlertTriangle, Users, Calendar, FileText, Clock, MessageSquare, Phone, Video, Search } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { AlertTriangle, Users, Calendar, FileText, Clock, MessageSquare, Phone, Video, Search, Activity, X } from 'lucide-react'
 import { useStore } from '@/lib/store'
+import { useUserStore } from '@/lib/userStore'
 import { formatDistanceToNow } from 'date-fns'
 
 export default function DoctorDashboard() {
-  const user = useStore((state) => state.user)
+  const user = useUserStore((state) => state.user)
   const allEmergencyAlerts = useStore((state) => state.emergencyAlerts)
   const appointments = useStore((state) => state.appointments)
   const patients = useStore((state) => state.patients)
   const dietPlans = useStore((state) => state.dietPlans) || []
+  const woundReports = useStore((state) => state.woundReports) || []
   const updateDietPlanStatus = useStore((state) => state.updateDietPlanStatus)
 
   const pendingDietPlans = useMemo(() =>
@@ -25,6 +27,11 @@ export default function DoctorDashboard() {
   const emergencyAlerts = useMemo(() =>
     allEmergencyAlerts.filter((a) => a.status === 'active'),
     [allEmergencyAlerts]
+  )
+
+  const pendingWoundReports = useMemo(() =>
+    woundReports.filter(r => r.status === 'sent'),
+    [woundReports]
   )
 
   // Mock statistics - in production, calculate from real data
@@ -60,6 +67,31 @@ export default function DoctorDashboard() {
       message: 'You have responded to an emergency alert.',
       type: 'success',
     })
+  }
+
+  // Wound Review State
+  const [selectedReport, setSelectedReport] = useState<any>(null)
+  const [reviewNote, setReviewNote] = useState('')
+  const updateWoundReportStatus = useStore((state) => state.updateWoundReportStatus)
+  const sendMessage = useStore((state) => state.sendMessage)
+
+  const handleSubmitReview = () => {
+    if (!selectedReport || !user) return
+
+    // 1. Update Report Status
+    updateWoundReportStatus(selectedReport.id, reviewNote)
+
+    // 2. Send Message to Patient
+    sendMessage({
+      senderId: user.id,
+      receiverId: selectedReport.userId,
+      content: `Dr. ${user.name} reviewed your wound check:\n\n"${reviewNote}"\n\nFull details available in your dashboard.`,
+      type: 'text'
+    })
+
+    setSelectedReport(null)
+    setReviewNote('')
+    alert("Review sent via Chat!")
   }
 
   return (
@@ -197,6 +229,58 @@ export default function DoctorDashboard() {
         </div>
       )}
 
+      {/* Wound Check Reviews */}
+      {pendingWoundReports.length > 0 && (
+        <div className="bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Activity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Wound Check Reviews</h2>
+              <p className="text-sm text-gray-500">{pendingWoundReports.length} scans waiting for review</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {pendingWoundReports.map(report => (
+              <div key={report.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900 dark:text-white">Patient ID: {report.userId.slice(0, 8)}</h3>
+                    <p className="text-sm text-gray-500">Submitted {formatDistanceToNow(new Date(report.timestamp), { addSuffix: true })}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${report.analysis.color === 'green' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                    }`}>
+                    {report.analysis.status}
+                  </span>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 border border-gray-200">
+                    <img src={report.imageUrl} alt="Wound" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">AI Findings:</p>
+                    <ul className="text-xs text-gray-500 list-disc list-inside mb-4">
+                      {report.analysis.concerns.map((c: string, idx: number) => (
+                        <li key={idx} className="line-clamp-1">{c}</li>
+                      ))}
+                    </ul>
+                    <button
+                      onClick={() => setSelectedReport(report)}
+                      className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-bold shadow transition-colors"
+                    >
+                      Review & Reply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Statistics Cards */}
       <div className="grid md:grid-cols-4 gap-4">
         <StatCard
@@ -277,7 +361,73 @@ export default function DoctorDashboard() {
           ))}
         </div>
       </div>
-    </div>
+
+      {/* Review Modal */}
+      {
+        selectedReport && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-800 z-10">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Review Wound Scan</h2>
+                <button onClick={() => setSelectedReport(null)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="flex gap-6">
+                  <div className="w-1/3">
+                    <img src={selectedReport.imageUrl} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm" alt="Wound Context" />
+                    <div className={`mt-4 p-3 rounded-lg text-center font-bold text-sm ${selectedReport.analysis.color === 'green' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                      }`}>
+                      AI Status: {selectedReport.analysis.status}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-2">AI Analysis</h3>
+                      <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl text-sm text-gray-600 dark:text-gray-300 space-y-2">
+                        <p><span className="font-bold">Healing Estimate:</span> {selectedReport.analysis.healingPercentage}%</p>
+                        <p><span className="font-bold">Concerns:</span> {selectedReport.analysis.concerns.join(", ")}</p>
+                        <p><span className="font-bold">Recommendation:</span> {selectedReport.analysis.recommendation}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-2">Doctor's Feedback</h3>
+                      <textarea
+                        value={reviewNote}
+                        onChange={(e) => setReviewNote(e.target.value)}
+                        placeholder="Write your clinical assessment and instructions for the patient..."
+                        className="w-full h-32 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-purple-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 flex justify-end gap-3 rounded-b-2xl">
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="px-6 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={!reviewNote.trim()}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-lg flex items-center gap-2"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Send Reply
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
 
   )
 }

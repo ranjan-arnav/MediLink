@@ -101,9 +101,10 @@ export interface DietLog {
 
 interface AppState {
   // Auth
-  user: User | null
-  setUser: (user: User | null) => void
-  logout: () => void
+  // User moved to useUserStore
+
+  // No user here anymore, check useUserStore
+
 
   // Symptom Reports
   symptomReports: SymptomReport[]
@@ -149,6 +150,15 @@ interface AppState {
   dietPlans: DietPlan[]
   addDietPlan: (plan: Omit<DietPlan, 'id' | 'generatedAt' | 'status'>) => void
   updateDietPlanStatus: (id: string, status: 'approved' | 'rejected', feedback?: string) => void
+
+  // Wound Reports
+  woundReports: WoundReport[]
+  addWoundReport: (report: Omit<WoundReport, 'id' | 'timestamp' | 'status'>) => void
+  updateWoundReportStatus: (id: string, notes: string) => void
+
+  // Chat
+  messages: ChatMessage[]
+  sendMessage: (msg: Omit<ChatMessage, 'id' | 'timestamp' | 'read'>) => void
 }
 
 export interface DietPlan {
@@ -161,14 +171,33 @@ export interface DietPlan {
   doctorFeedback?: string
 }
 
+export interface WoundReport {
+  id: string
+  userId: string
+  imageUrl: string // base64
+  analysis: any // JSON result from AI
+  timestamp: string
+  status: 'sent' | 'reviewed'
+  doctorNotes?: string
+}
+
+export interface ChatMessage {
+  id: string
+  senderId: string
+  receiverId: string
+  content: string
+  timestamp: string
+  type: 'text' | 'system' | 'image' | 'voice' | 'video'
+  read: boolean
+}
+
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
       // ... existing auth ...
 
-      user: null,
-      setUser: (user) => set({ user }),
-      logout: () => set({ user: null }),
+      // User managed in useUserStore
+
 
       // Symptom Reports
       symptomReports: [],
@@ -325,11 +354,45 @@ export const useStore = create<AppState>()(
             p.id === id ? { ...p, status, doctorFeedback: feedback } : p
           )
         })),
+
+      // Wound Reports
+      woundReports: [],
+      addWoundReport: (report) => {
+        const newReport: WoundReport = {
+          ...report,
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          status: 'sent'
+        }
+        set((state) => ({
+          woundReports: [...state.woundReports, newReport]
+        }))
+      },
+      updateWoundReportStatus: (id, notes) =>
+        set((state) => ({
+          woundReports: state.woundReports.map(r =>
+            r.id === id ? { ...r, status: 'reviewed', doctorNotes: notes } : r
+          )
+        })),
+
+      // Chat
+      messages: [], // Start empty
+      sendMessage: (msg) => {
+        const newMessage: ChatMessage = {
+          ...msg,
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          read: false
+        }
+        set((state) => ({
+          messages: [...state.messages, newMessage]
+        }))
+      },
+      clearMessages: () => set({ messages: [] }) // Added helper just in case
     }),
     {
-      name: 'medilink-storage',
+      name: 'medilink-storage-v2', // Bumped version to clear old chat data
       partialize: (state) => ({
-        user: state.user,
         symptomReports: state.symptomReports,
         medications: state.medications,
         appointments: state.appointments,
@@ -338,7 +401,11 @@ export const useStore = create<AppState>()(
         patients: state.patients,
         medicalRecords: state.medicalRecords,
         dietLogs: state.dietLogs,
+        dietLogs: state.dietLogs,
         dietPlans: state.dietPlans,
+        dietPlans: state.dietPlans,
+        woundReports: state.woundReports,
+        messages: state.messages,
       }),
     }
   )
